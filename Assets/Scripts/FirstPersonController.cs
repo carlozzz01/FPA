@@ -9,6 +9,7 @@ public class FirstPersonController : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] private float _walkSpeed = 5f;
+    [SerializeField] private float _crouchSpeed = 2.5f;
     private float _moveHorizontal;
     private float _moveVertical;
     private Vector3 _movement = new Vector3();
@@ -27,12 +28,16 @@ public class FirstPersonController : MonoBehaviour
     private float _verticalVelocity;
 
     [Header("Crouch")]
-    private bool _isCrouched = false;
     [SerializeField] private float _standingHeight;
     [SerializeField] private float _crouchHeight;
     [SerializeField] private float _crouchTime;
     private float _crouchTimer;
+    private bool _isCrouched = false;
 
+    private void Start()
+    {
+
+    }
 
     void Update()
     {
@@ -40,6 +45,7 @@ public class FirstPersonController : MonoBehaviour
         ApplyGravity();
         Rotation();
         Movement();
+        Crouch();
     }
 
     private void Controls()
@@ -55,10 +61,11 @@ public class FirstPersonController : MonoBehaviour
             Jump();
         }
 
-        if (Input.GetButtonDown("Crouch"))
+        if (Input.GetButtonDown("Crouch") && (_isCrouched && CanStandUp() || !_isCrouched))
         {
             _isCrouched = !_isCrouched;
-            _crouchTimer = _crouchTime;
+            
+            _crouchTimer = (_crouchTimer > 0) ? _crouchTime - _crouchTimer : _crouchTime;
         }
     }
 
@@ -69,7 +76,9 @@ public class FirstPersonController : MonoBehaviour
         // Quaternion * Vector3 esentially rotates the Vector3 towards the Quaternion direction
         _movement = transform.rotation * _movement;
 
-        _characterController.Move(_movement * _walkSpeed * Time.deltaTime);
+        float speed = _isCrouched ? _crouchSpeed : _walkSpeed;
+
+        _characterController.Move(_movement * speed * Time.deltaTime);
     }
 
     private void Rotation()
@@ -106,7 +115,11 @@ public class FirstPersonController : MonoBehaviour
 
     private void Crouch()
     {
-        if (_crouchTimer <= 0f) return;
+        if (_crouchTimer <= 0f)
+        {
+            
+            return;
+        }
 
         _crouchTimer -= Time.deltaTime;
 
@@ -116,7 +129,7 @@ public class FirstPersonController : MonoBehaviour
         float initialCenter = initialHeight / 2f;
         float targetCenter = targetHeight / 2f;
 
-        float t = _crouchTimer / _crouchTime;
+        float t = 1 - (_crouchTimer / _crouchTime);
 
         _characterController.height = Mathf.Lerp(initialHeight, targetHeight, t);
 
@@ -125,5 +138,19 @@ public class FirstPersonController : MonoBehaviour
         center.y = Mathf.Lerp(initialCenter, targetCenter, t);
 
         _characterController.center = center;
+
+        Vector3 headPosition = _head.localPosition;
+        headPosition.y = _characterController.height * .85f;
+        _head.localPosition = headPosition;
+    }
+
+    private bool CanStandUp()
+    {
+        Vector3 initialPoint = transform.position + Vector3.up * _crouchHeight;
+        Vector3 endPoint = initialPoint + Vector3.up * (_standingHeight - _crouchHeight);
+
+        bool canStandUp = !Physics.Linecast(initialPoint, endPoint);
+
+        return canStandUp;
     }
 }
