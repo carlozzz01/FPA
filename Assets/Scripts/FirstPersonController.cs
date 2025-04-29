@@ -1,3 +1,4 @@
+using System;
 using UnityEngine;
 
 public class FirstPersonController : MonoBehaviour
@@ -20,9 +21,23 @@ public class FirstPersonController : MonoBehaviour
     private float _rotationHorizontal;
     private float _rotationVertical;
 
+    [Header("Jump")]
+    [SerializeField] private float _jumpForce = 4f;
+    [SerializeField] private float _maxVerticalVelocity = 50f;
+    private float _verticalVelocity;
+
+    [Header("Crouch")]
+    private bool _isCrouched = false;
+    [SerializeField] private float _standingHeight;
+    [SerializeField] private float _crouchHeight;
+    [SerializeField] private float _crouchTime;
+    private float _crouchTimer;
+
+
     void Update()
     {
         Controls();
+        ApplyGravity();
         Rotation();
         Movement();
     }
@@ -34,6 +49,17 @@ public class FirstPersonController : MonoBehaviour
 
         _rotationHorizontal = Input.GetAxisRaw("Mouse X") * _sensitivity;
         _rotationVertical += Input.GetAxisRaw("Mouse Y") * _sensitivity * (_invertYAxis ? -1 : 1);
+
+        if (Input.GetButtonDown("Jump"))
+        {
+            Jump();
+        }
+
+        if (Input.GetButtonDown("Crouch"))
+        {
+            _isCrouched = !_isCrouched;
+            _crouchTimer = _crouchTime;
+        }
     }
 
     private void Movement()
@@ -53,5 +79,51 @@ public class FirstPersonController : MonoBehaviour
         _rotationVertical = Mathf.Clamp(_rotationVertical, _yMinAngle, _yMaxAngle);
 
         _head.localEulerAngles = new Vector3(_rotationVertical, 0f, 0f);
+    }
+
+    private void ApplyGravity()
+    {
+        _characterController.Move(Vector3.up * _verticalVelocity * Time.deltaTime);
+
+        if (_characterController.isGrounded)
+        {
+            _verticalVelocity = 0;
+        }
+        else
+        {
+            _verticalVelocity += Physics.gravity.y * Time.deltaTime;
+            _verticalVelocity = Mathf.Clamp(_verticalVelocity, -_maxVerticalVelocity, _maxVerticalVelocity);
+        }
+    }
+
+    private void Jump()
+    {
+        if (_characterController.isGrounded)
+        {
+            _verticalVelocity = _jumpForce;
+        }
+    }
+
+    private void Crouch()
+    {
+        if (_crouchTimer <= 0f) return;
+
+        _crouchTimer -= Time.deltaTime;
+
+        float initialHeight = _isCrouched ? _standingHeight : _crouchHeight;
+        float targetHeight = _isCrouched ? _crouchHeight : _standingHeight;
+
+        float initialCenter = initialHeight / 2f;
+        float targetCenter = targetHeight / 2f;
+
+        float t = _crouchTimer / _crouchTime;
+
+        _characterController.height = Mathf.Lerp(initialHeight, targetHeight, t);
+
+        Vector3 center = _characterController.center;
+
+        center.y = Mathf.Lerp(initialCenter, targetCenter, t);
+
+        _characterController.center = center;
     }
 }
