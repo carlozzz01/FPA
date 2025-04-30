@@ -89,7 +89,7 @@
             "FontSize": 12,
             "FontStyle": 0,
             "TextAnchor": 4,
-            "ImageType": 0
+            "ImageType": 15
         },
         {
             "Name": "Gameplay",
@@ -180,7 +180,7 @@
             "FontSize": 12,
             "FontStyle": 0,
             "TextAnchor": 4,
-            "ImageType": 0
+            "ImageType": 15
         },
         {
             "Name": "Managers",
@@ -271,7 +271,7 @@
             "FontSize": 12,
             "FontStyle": 0,
             "TextAnchor": 4,
-            "ImageType": 0
+            "ImageType": 15
         }
     ]
 }

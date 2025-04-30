@@ -4,7 +4,7 @@ using UnityEngine.InputSystem;
 
 public class PlayerVerticalMovement : MonoBehaviour
 {
-    [Header("Components")]
+    [Header("References")]
     [SerializeField] private Player _player;
 
     [Header("Standing")]
@@ -13,7 +13,6 @@ public class PlayerVerticalMovement : MonoBehaviour
     [SerializeField] private float _modelHeight = 1.8f;
 
     [Header("Crouch")]
-    [SerializeField] private bool _holdToCrouch;
     [SerializeField] private float _crouchHeight = 0.875f;
     [SerializeField] private float _crouchCenter = 0.8225f;
     [SerializeField] private float _crouchTime = 1f;
@@ -27,7 +26,6 @@ public class PlayerVerticalMovement : MonoBehaviour
     private float _floatHeight;
     private float _headToHeightRatio;
     private Coroutine _crouchingCoroutine;
-    public bool isGrounded { get; private set; }
     public bool isCrouching { get; private set; }
 
     private void Awake()
@@ -50,9 +48,6 @@ public class PlayerVerticalMovement : MonoBehaviour
         _headToHeightRatio = _player.Head.localPosition.y / _modelHeight;
 
         _floatHeight = _standingCenter;
-
-        isCrouching = false;
-        _crouchTimer = 0;
     }
 
     void FixedUpdate()
@@ -81,28 +76,28 @@ public class PlayerVerticalMovement : MonoBehaviour
 
             _player.Rigidbody.AddForce(liftForce, ForceMode.VelocityChange);
 
-            isGrounded = true;
+            _player.isGrounded = true;
         }
         else
         {
-            isGrounded = false;
+            _player.isGrounded = false;
         }
     }
 
     public void OnCrouch(InputAction.CallbackContext context)
     {
-        Debug.Log("Crouch");
+        if (_player.state == PlayerState.Sprint) return;
 
         if (context.started)
         {
-            isCrouching = _holdToCrouch ? true : !isCrouching;
+            isCrouching = _player.HoldToCrouch ? true : !isCrouching;
         }
-        else if (context.canceled && _holdToCrouch)
+        else if (context.canceled && _player.HoldToCrouch)
         {
             isCrouching = false;
         }
 
-        if (context.started || (context.canceled && _holdToCrouch))
+        if (context.started || (context.canceled && _player.HoldToCrouch))
         {
             _crouchTimer = _crouchTimer > 0 ? _crouchTime - _crouchTimer : _crouchTime;
 
