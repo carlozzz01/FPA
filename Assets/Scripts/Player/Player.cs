@@ -25,6 +25,7 @@ public class Player : MonoBehaviour, IPlayerActions
     public PlayerState state;
 
     public Action<InputAction.CallbackContext> OnCrouchInput;
+    public Action<InputAction.CallbackContext> OnInteractInput;
     public Action<InputAction.CallbackContext> OnLookInput;
     public Action<InputAction.CallbackContext> OnMoveInput;
     public Action<InputAction.CallbackContext> OnSprintInput;
@@ -72,6 +73,7 @@ public class Player : MonoBehaviour, IPlayerActions
 
     public void OnInteract(InputAction.CallbackContext context)
     {
+        OnInteractInput?.Invoke(context);
     }
 
     public void OnJump(InputAction.CallbackContext context)
